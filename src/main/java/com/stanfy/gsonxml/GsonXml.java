@@ -14,6 +14,8 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.MalformedJsonException;
 import com.stanfy.gsonxml.XmlReader.Options;
 
+import org.xmlpull.v1.XmlPullParser;
+
 /**
  * Wrapper for {@link Gson}.
  * @author Roman Mazur (Stanfy - http://stanfy.com)
@@ -55,6 +57,13 @@ public class GsonXml {
 
   public <T> T fromXml(final Reader json, final Class<T> classOfT) throws JsonSyntaxException, JsonIOException {
     final XmlReader jsonReader = new XmlReader(json, xmlParserCreator, options); // change reader
+    final Object object = fromXml(jsonReader, classOfT);
+    assertFullConsumption(object, jsonReader);
+    return Primitives.wrap(classOfT).cast(object);
+  }
+
+  public <T> T fromXml(final XmlPullParser parser, final Class<T> classOfT) throws JsonSyntaxException, JsonIOException {
+    final XmlReader jsonReader = new XmlReader(parser, options); // change reader
     final Object object = fromXml(jsonReader, classOfT);
     assertFullConsumption(object, jsonReader);
     return Primitives.wrap(classOfT).cast(object);

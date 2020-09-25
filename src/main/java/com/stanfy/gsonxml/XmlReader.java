@@ -8,6 +8,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * Reads XML as JSON.
@@ -100,6 +101,14 @@ public class XmlReader extends JsonReader {
       throw new RuntimeException(e);
     }
   }
+
+  public XmlReader(final XmlPullParser parser, final Options options) {
+    super(new StringReader(""));
+    this.xmlParser = parser;
+    this.options = options;
+    this.xmlToken.type = IGNORE;
+  }
+
 
   @SuppressWarnings("unused")
   private CharSequence dump() {
