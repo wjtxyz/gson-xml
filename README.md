@@ -163,6 +163,87 @@ And this parser does not support namespaces.
 Read also this [blog post](http://android-developers.blogspot.com/2011_12_01_archive.html) about issues with
 Android XML parsers.
 
+support android XML binary resource
+
+android xml resource file: updateconfig.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+    <data name="@string/app_name" name1="@android:color/white" android:padding="10dp">
+    </data>
+    <data name="@string/app_name" name1="@android:color/black" android:padding="100px">
+    </data>
+</root>
+```
+
+data model file: UpdateConfig.java 
+```java
+public class UpdateConfig {
+    @SerializedName("data")
+    List<data> datas;
+
+    public static class data {
+        @SerializedName("@name")
+        String name;
+        @SerializedName("@name1")
+        String name1;
+        @SerializedName("@padding")
+        String padding;
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "{name=" + name + " name1=" + name1 + " padding=" + padding + "}";
+        }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "{datas=" + datas + "}";
+    }
+}
+
+```
+
+Deserialize from android context
+```java
+            GsonXml gsonXml = new GsonXmlBuilder()
+                    .setXmlParserCreator(new XmlParserCreator() {
+                        @Override
+                        public XmlPullParser createParser() {
+                            return Xml.newPullParser();
+                        }
+                    })
+                    .setSameNameLists(true)
+                    .create();
+
+            try (XmlResourceParser parser = getResources().getXml(R.xml.updateconfig)) {
+                UpdateConfig updateConfig = gsonXml.fromXml(parser, new XmlReader.BiSupplier<XmlPullParser, Integer, String>() {
+                    @Override
+                    public String apply(XmlPullParser p, Integer i) {
+                        final int resourceId = ((XmlResourceParser) p).getAttributeResourceValue(i, -1);
+                        if (resourceId != -1) {
+                            TypedValue typedValue = new TypedValue();
+                            getResources().getValue(resourceId, typedValue, true);
+                            return String.valueOf(typedValue.coerceToString());
+                        } else {
+                            return p.getAttributeValue(i);
+                        }
+                    }
+                }, UpdateConfig.class);
+                Log.d(TAG, "updateConfig=" + updateConfig);
+            }
+
+```
+
+logcat
+```
+MainActivity: updateConfig={datas=[{name=SimpleXMLTest name1=#ffffffff padding=10.0dip}, {name=SimpleXMLTest name1=#ff000000 padding=100.0px}]}
+```
+
+
+
 License
 -------
 
