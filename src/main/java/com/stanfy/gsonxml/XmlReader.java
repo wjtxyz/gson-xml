@@ -47,6 +47,13 @@ public class XmlReader extends JsonReader {
   /** XML parser. */
   private final XmlPullParser xmlParser;
 
+  private BiSupplier<XmlPullParser, Integer, String> attributeValueSupplier = new BiSupplier<XmlPullParser, Integer, String>() {
+    @Override
+    public String apply(XmlPullParser parser, Integer integer) {
+      return parser.getAttributeValue(integer);
+    }
+  };
+
   /** Option. */
   final Options options;
 
@@ -103,8 +110,15 @@ public class XmlReader extends JsonReader {
   }
 
   public XmlReader(final XmlPullParser parser, final Options options) {
+    this(parser, null, options);
+  }
+
+  public XmlReader(final XmlPullParser parser, final BiSupplier<XmlPullParser, Integer, String> attributeValueSupplier, final Options options) {
     super(new StringReader(""));
     this.xmlParser = parser;
+    if (attributeValueSupplier != null) {
+      this.attributeValueSupplier = attributeValueSupplier;
+    }
     this.options = options;
     this.xmlToken.type = IGNORE;
   }
@@ -774,7 +788,7 @@ public class XmlReader extends JsonReader {
         if (options.namespaces) {
           ns[i] = parser.getAttributePrefix(i);
         }
-        values[i] = parser.getAttributeValue(i);
+        values[i] = attributeValueSupplier.apply(parser, i);
       }
     }
 
@@ -843,4 +857,7 @@ public class XmlReader extends JsonReader {
   /** Factory. */
   private interface Creator<T> { T create(); }
 
+  public interface BiSupplier<T, V, R> {
+    R  apply(T t, V v);
+  }
 }

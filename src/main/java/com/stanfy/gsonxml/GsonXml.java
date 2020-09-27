@@ -69,6 +69,13 @@ public class GsonXml {
     return Primitives.wrap(classOfT).cast(object);
   }
 
+  public <T> T fromXml(final XmlPullParser parser, XmlReader.BiSupplier<XmlPullParser, Integer, String> attributeValueGetter, final Class<T> classOfT) throws JsonSyntaxException, JsonIOException {
+    final XmlReader jsonReader = new XmlReader(parser, attributeValueGetter, options); // change reader
+    final Object object = fromXml(jsonReader, classOfT);
+    assertFullConsumption(object, jsonReader);
+    return Primitives.wrap(classOfT).cast(object);
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T fromXml(final Reader json, final Type typeOfT) throws JsonIOException, JsonSyntaxException {
     final XmlReader jsonReader = new XmlReader(json, xmlParserCreator, options); // change reader
